@@ -66,7 +66,7 @@ for task in tasks: # this assumes that input file names are identical for all ta
                 for dataPath in outputs:
                     dataPath = subject + dataPath
                     ROIMaps,ROITs = ROIplay.pickROITs(dataPath,ROIMaskPath)
-                    adjacencyMatrices.append(np.corrcoef(ROITs))
+                    adjacencyMatrices.append(functions.fisherTransform(np.corrcoef(ROITs)))
                 mentalFirstMatrices.append(np.sum(adjacencyMatrices,axis=0)/nBlocks)
             mentalFirstMatrices = np.stack(mentalFirstMatrices,axis=2)
                 
@@ -75,7 +75,7 @@ for task in tasks: # this assumes that input file names are identical for all ta
                 for dataPath in outputs:
                     dataPath = subject + dataPath
                     ROIMaps,ROITs = ROIplay.pickROITs(dataPath,ROIMaskPath)
-                    adjacencyMatrices.append(np.corrcoef(ROITs))
+                    adjacencyMatrices.append(functions.fisherTransform(np.corrcoef(ROITs)))
                 physicalFirstMatrices.append(np.sum(adjacencyMatrices,axis=0)/nBlocks)
             physicalFirstMatrices = np.stack(physicalFirstMatrices,axis=2)
             
@@ -102,17 +102,17 @@ for task in tasks: # this assumes that input file names are identical for all ta
             
             for subject in subjectsMentalFirst:
                 _,firstROITs = ROIplay.pickROITs(subject + outputs[0],ROIMaskPath)
-                firstMatricesMental.append(np.corrcoef(firstROITs))
+                firstMatricesMental.append(functions.fisherTransform(np.corrcoef(firstROITs)))
                 _,lastROITs = ROIplay.pickROITs(subject + outputs[-1],ROIMaskPath)
-                lastMatricesMental.append(np.corrcoef(lastROITs))
+                lastMatricesMental.append(functions.fisherTransform(np.corrcoef(lastROITs)))
             firstMatricesMental = np.stack(firstMatricesMental,axis=2)
             lastMatricesMental = np.stack(lastMatricesMental,axis=2)
             
             for subject in subjectsPhysicalFirst:
                 _,firstROITs = ROIplay.pickROITs(subject + outputs[0],ROIMaskPath)
-                firstMatricesPhysical.append(np.corrcoef(firstROITs))
+                firstMatricesPhysical.append(functions.fisherTransform(np.corrcoef(firstROITs)))
                 _,lastROITs = ROIplay.pickROITs(subject + outputs[-1],ROIMaskPath)
-                lastMatricesPhysical.append(np.corrcoef(lastROITs))
+                lastMatricesPhysical.append(functions.fisherTransform(np.corrcoef(lastROITs)))
             firstMatricesPhysical = np.stack(firstMatricesMental,axis=2)
             lastMatricesPhysical = np.stack(lastMatricesMental,axis=2)
             
@@ -148,14 +148,14 @@ for task in tasks: # this assumes that input file names are identical for all ta
             # First, let's calculate adjacency matrix for the first block
             for subject in subjectsMentalFirst:
                 _,firstROITs = ROIplay.pickROITs(subject + outputs[0],ROIMaskPath)
-                firstMatricesMental.append(np.corrcoef(firstROITs))
+                firstMatricesMental.append(functions.fisherTransform(np.corrcoef(firstROITs)))
             firstMatricesMental = np.stack(firstMatricesMental,axis=2)
             # Looping over blocks, let's calculate the next adjacency matrix, run NBS, and save results
             for i in range(nBlocks-1):
                 lastMatricesMental = []
                 for subject in subjectsMentalFirst:
                     _,lastROITs = ROIplay.pickROITs(subject + outputs[i+1],ROIMaskPath)
-                    lastMatricesMental.append(np.corrcoef(lastROITs))
+                    lastMatricesMental.append(functions.fisherTransform(np.corrcoef(lastROITs)))
                 lastMatricesMental = np.stack(lastMatricesMental,axis=2)
                 pval, adj, null = nbs(firstMatricesMental,lastMatricesMental,primaryThres,k,tail,withinPaired,verbose)
                 nSignificant = len(np.where(pval<pThres))
@@ -170,14 +170,14 @@ for task in tasks: # this assumes that input file names are identical for all ta
             # First, let's calculate adjacency matrix for the first block
             for subject in subjectsPhysicalFirst:
                 _,firstROITs = ROIplay.pickROITs(subject + outputs[0],ROIMaskPath)
-                firstMatricesPhysical.append(np.corrcoef(firstROITs))
+                firstMatricesPhysical.append(functions.fisherTransform(np.corrcoef(firstROITs)))
             firstMatricesPhysical = np.stack(firstMatricesPhysical,axis=2)
             # Looping over blocks, let's calculate the next adjacency matrix, run NBS, and save results
             for i in range(nBlocks-1):
                 lastMatricesPhysical = []
                 for subject in subjectsPhysicalFirst:
                     _,lastROITs = ROIplay.pickROITs(subject + outputs[i+1],ROIMaskPath)
-                    lastMatricesPhysical.append(np.corrcoef(lastROITs))
+                    lastMatricesPhysical.append(functions.fisherTransform(np.corrcoef(lastROITs)))
                 lastMatricesPhysical = np.stack(lastMatricesPhysical,axis=2)
                 pval, adj, null = nbs(firstMatricesPhysical,lastMatricesPhysical,primaryThres,k,tail,withinPaired,verbose)
                 nSignificant = len(np.where(pval<pThres))
@@ -197,7 +197,7 @@ for task in tasks: # this assumes that input file names are identical for all ta
                 for dataPath in outputs:
                     dataPath = subject + dataPath
                     _,ROITs = ROIplay.pickROITs(dataPath,ROIMaskPath)
-                    adjacencyMatrices.append(np.corrcoef(ROITs))
+                    adjacencyMatrices.append(functions.fisherTransform(np.corrcoef(ROITs)))
                 conditionMatrices[i].append(np.sum(adjacencyMatrices,axis=0)/nBlocks)
         conditionMatrices = [np.stack(conditionMatrix,axis=2) for conditionMatrix in conditionMatrices]
         
@@ -217,7 +217,7 @@ for task in tasks: # this assumes that input file names are identical for all ta
                 for dataPath in outputs:
                     dataPath = subject + dataPath
                     _,ROITs = ROIplay.pickROITs(dataPath,ROIMaskPath)
-                    adjacencyMatrices.append(np.corrcoef(ROITs))
+                    adjacencyMatrices.append(functions.fisherTransform(np.corrcoef(ROITs)))
                 conditionMatrices[i].append(np.sum(adjacencyMatrices,axis=0)/nBlocks)
         conditionMatrices = [np.stack(conditionMatrix,axis=2) for conditionMatrix in conditionMatrices]
         

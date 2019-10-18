@@ -42,3 +42,18 @@ def combineNiis(inputPaths, outputPath):
     outputData = np.stack(outputData,axis=3)
     outputImg = nib.Nifti1Image(outputData,affine)     
     nib.save(outputImg,outputPath)
+    
+def fisherTransform(data):
+    """
+    Performs the Fisher Z transform.
+    
+    Parameters:
+    -----------
+    data: scalar or np.array
+    
+    Returns:
+    --------
+    z: scalar or np.array, Fisher Z-transformed version of data
+    """
+    z = 0.5*np.log((1+data)/(1-data))
+    return z
