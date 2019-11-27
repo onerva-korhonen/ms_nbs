@@ -22,6 +22,7 @@ conditions = params.conditions
 subjectsMentalFirst = params.subjectsMentalFirst
 subjectsPhysicalFirst = params.subjectsPhysicalFirst
 subjects = subjectsMentalFirst+subjectsPhysicalFirst
+prefixes = params.prefixes
 inputPaths = params.inputPaths
 outputPaths = params.outputPaths
 ROIMaskPath = params.ROIMaskPath
@@ -40,20 +41,20 @@ verbose = params.verbose
 compareGroups = True
 compareFirstLast = True
 compareConsequtive = True
-compareConditions = True
+compareConditions = False
 
 # The following loops are over all possible combinations of task and condition (see params for details)
 
-for task in tasks: # this assumes that input file names are identical for all tasks
+for task,subjectPrefixes in zip(tasks,prefixes): # this assumes that input file names are identical for all tasks
     for condition,inputs,outputs in zip(conditions,inputPaths,outputPaths):
         nBlocks = len(inputs)
         
         # Data has been saved as single slides. Let's combine them into time series
 
-        for subject in subjects:
+        for subject, subjectPrefix in zip(subjects, subjectPrefixes):
             for block, output in zip(inputs, outputs):
-                block = [subject + '/' + task + fName for fName in block]
-                output = subject + '/' + task + output
+                block = [subject + '/' + task + '/' + subjectPrefix + fName for fName in block]
+                output = subject + '/' + task + '/' + output
                 functions.combineNiis(block,output)
         
         # Case 1: comparison between groups
@@ -64,7 +65,7 @@ for task in tasks: # this assumes that input file names are identical for all ta
             for subject in subjectsMentalFirst:
                 adjacencyMatrices = []
                 for dataPath in outputs:
-                    dataPath = subject + dataPath
+                    dataPath = subject + '/' + task + '/' + dataPath
                     ROIMaps,ROITs = ROIplay.pickROITs(dataPath,ROIMaskPath)
                     adjacencyMatrices.append(functions.fisherTransform(np.corrcoef(ROITs)))
                 mentalFirstMatrices.append(np.sum(adjacencyMatrices,axis=0)/nBlocks)
