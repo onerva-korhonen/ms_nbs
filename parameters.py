@@ -46,9 +46,13 @@ outputPathsStrong = ['combined-timeseries-strong-press-block' + str(n) + '.nii' 
 outputPathsAll = ['combined-timeseries-allTasks-block' + str(n) + '.nii' for n in range(len(inputPathsAll))] 
 outputPaths = [outputPathsAll]#[outputPathsMild,outputPathsMiddle,outputPathsStrong]
 
+resampledPaths = [['combined-timeseries-allTasks-block' + str(n) + '_resampled.nii.gz' for n in range(len(inputPathsAll))]]
+
 ROIMaskPath = 'atlases/brainnetome/BNA_MPM_rois_2mm.nii'
 
 nbsOutputPath = '/home/onerva/projects/nbs/output/nbs-results-'
+
+groupMaskSaveName = 'group-gray-matter-mask.nii'
 
 # NBS
 primaryThres = 4 # This is the test statistic threshold for NBS

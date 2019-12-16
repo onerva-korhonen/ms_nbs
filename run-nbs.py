@@ -10,6 +10,8 @@ A frontend script for running the NBS analysis
 import numpy as np
 import cPickle as pickle
 from bct import nbs
+import nibabel as nib
+import os
 
 import ROIplay
 
@@ -25,8 +27,10 @@ subjects = subjectsMentalFirst+subjectsPhysicalFirst
 prefixes = params.prefixes
 inputPaths = params.inputPaths
 outputPaths = params.outputPaths
+resampledPaths = params.resampledPaths
 ROIMaskPath = params.ROIMaskPath
 nbsOutputPath = params.nbsOutputPath
+groupMaskSaveName = params.groupMaskSaveName
 
 primaryThres = params.primaryThres
 pThres = params.pThresh
@@ -38,25 +42,47 @@ verbose = params.verbose
 
 # Edit the following variables to pick the comparisons to be performed
 
+concatenateNiis = False
+
 compareGroups = True
-compareFirstLast = True
-compareConsequtive = True
+compareFirstLast = False
+compareConsequtive = False
 compareConditions = False
 
 # The following loops are over all possible combinations of task and condition (see params for details)
 
 for task,subjectPrefixes in zip(tasks,prefixes): # this assumes that input file names are identical for all tasks
-    for condition,inputs,outputs in zip(conditions,inputPaths,outputPaths):
+    for condition,inputs,outputs,resampled in zip(conditions,inputPaths,outputPaths, resampledPaths):
         nBlocks = len(inputs)
+        
+        if concatenateNiis:
         
         # Data has been saved as single slides. Let's combine them into time series
 
-        for subject, subjectPrefix in zip(subjects, subjectPrefixes):
-            for block, output in zip(inputs, outputs):
-                block = [subject + '/' + task + '/' + subjectPrefix + fName for fName in block]
-                output = subject + '/' + task + '/' + output
-                functions.combineNiis(block,output)
-        
+            for subject, subjectPrefix in zip(subjects, subjectPrefixes):
+                print subject
+                for block, output in zip(inputs, outputs):
+                    block = [subject + '/' + task + '/' + subjectPrefix + fName for fName in block]
+                    output = subject + '/' + task + '/' + output
+                    functions.combineNiis(block,output)
+                    
+        else:
+            
+            # Data has already been combined to time series in nii format. Let's greate a group gray matter mask
+            
+            for i, subject in enumerate(subjects):
+                print subject
+                for j, block in enumerate(resampled):
+                    dataPath = subject + '/' + task + '/' + block
+                    data = ROIplay.readNii(dataPath)
+                    if i == j == 0:
+                        groupMask = np.ones(data.shape[0:3])
+                    groupMask = np.prod(data,axis=3)*groupMask
+            groupMask[np.where(np.abs(groupMask)>0)] = 1
+            groupMaskSavePath = os.path.split(os.path.split(subjects[0])[0])[0] + groupMaskSaveName
+            outputImg = nib.Nifti1Image(groupMask,affine=None)     
+            nib.save(outputImg,groupMaskSavePath)
+                    
         # Case 1: comparison between groups
         if compareGroups:
         # Downloading data and calculating adjacency matrices (read all blocks, average adjacency matrices across groups)
@@ -66,7 +92,7 @@ for task,subjectPrefixes in zip(tasks,prefixes): # this assumes that input file 
                 adjacencyMatrices = []
                 for dataPath in outputs:
                     dataPath = subject + '/' + task + '/' + dataPath
-                    ROIMaps,ROITs = ROIplay.pickROITs(dataPath,ROIMaskPath)
+                    ROIMaps,ROITs = ROIplay.pickROITs(dataPath,ROIMaskPath,grayMaskPath=groupMaskSavePath)
                     adjacencyMatrices.append(functions.fisherTransform(np.corrcoef(ROITs)))
                 mentalFirstMatrices.append(np.sum(adjacencyMatrices,axis=0)/nBlocks)
             mentalFirstMatrices = np.stack(mentalFirstMatrices,axis=2)
