@@ -26,6 +26,7 @@ subjectsPhysicalFirst = params.subjectsPhysicalFirst
 subjects = subjectsMentalFirst+subjectsPhysicalFirst
 prefixes = params.prefixes
 inputPaths = params.inputPaths
+individualMaskPaths = params.allIndividualMaskPaths
 outputPaths = params.outputPaths
 resampledPaths = params.resampledPaths
 ROIMaskPath = params.ROIMaskPath
@@ -51,7 +52,7 @@ compareConditions = False
 
 # The following loops are over all possible combinations of task and condition (see params for details)
 
-for task,subjectPrefixes in zip(tasks,prefixes): # this assumes that input file names are identical for all tasks
+for task,subjectPrefixes, maskPaths in zip(tasks,prefixes,individualMaskPaths):
     for condition,inputs,outputs,resampled in zip(conditions,inputPaths,outputPaths, resampledPaths):
         nBlocks = len(inputs)
         
@@ -59,16 +60,20 @@ for task,subjectPrefixes in zip(tasks,prefixes): # this assumes that input file 
         
         # Data has been saved as single slides. Let's combine them into time series
 
-            for subject, subjectPrefix in zip(subjects, subjectPrefixes):
+            for subject, subjectPrefix, maskPath in zip(subjects, subjectPrefixes, maskPaths):
                 print subject
+                mask = nib.load(maskPath)
+                maskImg = mask.get_fdata()
                 for block, output in zip(inputs, outputs):
                     block = [subject + '/' + task + '/' + subjectPrefix + fName for fName in block]
                     output = subject + '/' + task + '/' + output
-                    functions.combineNiis(block,output)
+                    functions.combineNiis(block,output,mask=maskImg)
                     
         else:
             
             # Data has already been combined to time series in nii format. Let's greate a group gray matter mask
+            # TODO: add here an option for resampling the data with FLIRT
+            # (for now, I've done the resampling with FLIRT outside of the Python script)
             
             for i, subject in enumerate(subjects):
                 print subject

@@ -16,7 +16,7 @@ import ROIplay
 
 import parameters as params
 
-def combineNiis(inputPaths, outputPath):
+def combineNiis(inputPaths, outputPath, mask=None):
     """
     Combines several NIFTI files at paths to a single file. The data of this new file
     consists of the data of the onput files stacked horizontally. The affine of the
@@ -26,6 +26,7 @@ def combineNiis(inputPaths, outputPath):
     -----------
     inputPaths: list of strs, paths to the input NIFTI files
     outputPath: str, path to which save the new NIFTI file
+    mask: np.array, a gray matter mask showing which voxels of the input NIFTI belongs to the brain
     
     Returns:
     --------
@@ -34,7 +35,10 @@ def combineNiis(inputPaths, outputPath):
     outputData = []
     for i, path in enumerate(inputPaths):
         img = nib.load(path)
-        outputData.append(img.get_fdata())
+        if not mask == None:
+            outputData.append(img.get_fdata()*mask)
+        else:
+            outputData.append(img.get_fdata())
         if i == 0:
             affine = img.affine
         #else:

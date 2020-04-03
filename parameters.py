@@ -14,8 +14,8 @@ conditions = ['all']#['mild','middle','strong']
 
 # File paths
 
-subjectsMentalFirst = ['/home/onerva/projects/nbs/data/less_smoothed/mental_first/' + subject for subject in ['P01_DS','P2_CA','P03_CR','P3_HE','P6_CS','P8_TM','P10_BT','P12_SG','P14_OA','P16_CA','P18_CM','P20_BC','P24_HJ','P26_PC','P28_YM','P30_RD','P33_SL','P37_GS','P39_PR']]
-subjectsPhysicalFirst = ['/home/onerva/projects/nbs/data/less_smoothed/physical_first/' + subject for subject in ['P00_MM','P1_DE','P4_OF','P7_PE','P9_AM','P11_DA','P13_VM','P15_HD','P17_CL','P19_LM','P23_ZS','P25_LK','P27_MN','P29_MF','P31_CC','P32_ME','P34_FA','P36_LC']]
+subjectsMentalFirst = ['/m/cs/scratch/networks/aokorhon/nbs/data/mental_first/' + subject for subject in ['P01_DS','P2_CA','P03_CR','P3_HE','P6_CS','P8_TM','P10_BT','P12_SG','P14_OA','P16_CA','P18_CM','P20_BC','P24_HJ','P26_PC','P28_YM','P30_RD','P33_SL','P37_GS','P39_PR']]
+subjectsPhysicalFirst = ['/m/cs/scratch/networks/aokorhon/nbs/data/physical_first/' + subject for subject in ['P00_MM','P1_DE','P4_OF','P7_PE','P9_AM','P11_DA','P13_VM','P15_HD','P17_CL','P19_LM','P23_ZS','P25_LK','P27_MN','P29_MF','P31_CC','P32_ME','P34_FA','P36_LC']]
 subjects = subjectsMentalFirst + subjectsPhysicalFirst
 # prefixes is a task x subjects 2D list, mentalFirst and physicalFirst subjects combined inside tasks
 # NOTE: the order must be the same as in the subjects list
@@ -39,6 +39,13 @@ inputPathsAll = [['00001-001144-01.nii','00001-001188-01.nii','00001-001232-01.n
                   '00001-011484-01.nii','00001-011528-01.nii','00001-011572-01.nii','00001-011616-01.nii','00001-011660-01.nii','00001-011704-01.nii','00001-011748-01.nii','00001-011792-01.nii','00001-011836-01.nii',
                   '00001-011880-01.nii','00001-011924-01.nii','00001-011968-01.nii','00001-012012-01.nii','00001-012056-01.nii','00001-012100-01.nii','00001-012144-01.nii']]
 inputPaths = [inputPathsAll]#[inputPathsMild,inputPathsMiddle,inputPathsStrong]
+
+# these will be tasks x subjects lists
+individualMaskPathsMentalFirst = [['/m/cs/scratch/networks/aokorhon/nbs/data/masks_mental_first/' + subject for subject in ['P01_DS','P2_CA','P03_CR','P3_HE','P6_CS','P8_TM','P10_BT','P12_SG','P14_OA','P16_CA','P18_CM','P20_BC','P24_HJ','P26_PC','P28_YM','P30_RD','P33_SL','P37_GS','P39_PR'] + '/mask_M.nii'],
+                                  ['/m/cs/scratch/networks/aokorhon/nbs/data/masks_mental_first/' + subject for subject in ['P01_DS','P2_CA','P03_CR','P3_HE','P6_CS','P8_TM','P10_BT','P12_SG','P14_OA','P16_CA','P18_CM','P20_BC','P24_HJ','P26_PC','P28_YM','P30_RD','P33_SL','P37_GS','P39_PR'] + '/mask_P.nii']]
+individualMaskPathsPhysicalFirst = [['/m/cs/scratch/networks/aokorhon/nbs/data/masks_physical_first/' + subject for subject in ['P00_MM','P1_DE','P4_OF','P7_PE','P9_AM','P11_DA','P13_VM','P15_HD','P17_CL','P19_LM','P23_ZS','P25_LK','P27_MN','P29_MF','P31_CC','P32_ME','P34_FA','P36_LC'] + '/mask_M.nii'],
+                                    ['/m/cs/scratch/networks/aokorhon/nbs/data/masks_physical_first/' + subject for subject in ['P00_MM','P1_DE','P4_OF','P7_PE','P9_AM','P11_DA','P13_VM','P15_HD','P17_CL','P19_LM','P23_ZS','P25_LK','P27_MN','P29_MF','P31_CC','P32_ME','P34_FA','P36_LC'] + '/mask_P.nii']]
+allIndividualMaskPaths = [individualMaskPathsMentalFirst[0] + individualMaskPathsPhysicalFirst[0], individualMaskPathsMentalFirst[1] + individualMaskPathsPhysicalFirst[1]]
 
 outputPathsMild = ['combined-timeseries-mild-press-block' + str(n) + '.nii' for n in range(len(inputPathsMild))] # names of the combined time series NIFTI files
 outputPathsMiddle = ['combined-timeseries-middle-press-block' + str(n) + '.nii' for n in range(len(inputPathsMiddle))]
