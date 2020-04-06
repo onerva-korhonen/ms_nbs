@@ -59,6 +59,9 @@ ROIMaskPath = 'atlases/brainnetome/BNA_MPM_rois_2mm.nii'
 
 nbsOutputPath = '/home/onerva/projects/nbs/output/nbs-results-'
 
+resampleResolution = 4
+resampleTemplate = '/m/cs/scratch/networks/aokorhon/nbs/ms_nbs/atlases/MNI152_T1_4mm_brain.nii'
+
 groupMaskSaveName = 'group-gray-matter-mask.nii'
 
 # NBS

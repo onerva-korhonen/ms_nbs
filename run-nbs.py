@@ -12,6 +12,7 @@ import cPickle as pickle
 from bct import nbs
 import nibabel as nib
 import os
+import system
 
 import ROIplay
 
@@ -33,6 +34,9 @@ ROIMaskPath = params.ROIMaskPath
 nbsOutputPath = params.nbsOutputPath
 groupMaskSaveName = params.groupMaskSaveName
 
+resampleResolution = params.resampleResolution
+resampleTemplate = params.resampleTemplate
+
 primaryThres = params.primaryThres
 pThres = params.pThresh
 k = params.k
@@ -44,6 +48,8 @@ verbose = params.verbose
 # Edit the following variables to pick the comparisons to be performed
 
 concatenateNiis = False
+resampleNiis = True
+
 
 compareGroups = True
 compareFirstLast = False
@@ -53,7 +59,7 @@ compareConditions = False
 # The following loops are over all possible combinations of task and condition (see params for details)
 
 for task,subjectPrefixes, maskPaths in zip(tasks,prefixes,individualMaskPaths):
-    for condition,inputs,outputs,resampled in zip(conditions,inputPaths,outputPaths, resampledPaths):
+    for condition,inputs,outputs,resampled in zip(conditions,inputPaths,outputPaths,resampledPaths):
         nBlocks = len(inputs)
         
         if concatenateNiis:
@@ -69,24 +75,28 @@ for task,subjectPrefixes, maskPaths in zip(tasks,prefixes,individualMaskPaths):
                     output = subject + '/' + task + '/' + output
                     functions.combineNiis(block,output,mask=maskImg)
                     
-        else:
+        if resampleNiis:
             
-            # Data has already been combined to time series in nii format. Let's greate a group gray matter mask
-            # TODO: add here an option for resampling the data with FLIRT
-            # (for now, I've done the resampling with FLIRT outside of the Python script)
+        # Case for resampling the data to a given resolution, for example to match an atlas template
+        # NOTE: resampling is done by FSL FLIRT (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki) that need to be installed
+            for subject in subjects:
+                for output, resampledPath in zip(outputs,resampledPaths):
+                    niiToResample = subject + '/' + task + '/' + output
+                    system('flirt -applyisoxfm ' + resampleResolution + ' -in ' + niiToResample + ' -ref ' + resampleTemplate  + ' -out ' + resampledPath + ' -interp nearestneighbour')
             
-            for i, subject in enumerate(subjects):
-                print subject
-                for j, block in enumerate(resampled):
-                    dataPath = subject + '/' + task + '/' + block
-                    data = ROIplay.readNii(dataPath)
-                    if i == j == 0:
-                        groupMask = np.ones(data.shape[0:3])
-                    groupMask = np.prod(data,axis=3)*groupMask
-            groupMask[np.where(np.abs(groupMask)>0)] = 1
-            groupMaskSavePath = os.path.split(os.path.split(subjects[0])[0])[0] + groupMaskSaveName
-            outputImg = nib.Nifti1Image(groupMask,affine=None)     
-            nib.save(outputImg,groupMaskSavePath)
+        for i, subject in enumerate(subjects):
+        # Data has already been combined to time series in nii format. Let's greate a group gray matter mask
+            print subject
+            for j, block in enumerate(resampled):
+                dataPath = subject + '/' + task + '/' + block
+                data = ROIplay.readNii(dataPath)
+                if i == j == 0:
+                    groupMask = np.ones(data.shape[0:3])
+                groupMask = np.prod(data,axis=3)*groupMask
+        groupMask[np.where(np.abs(groupMask)>0)] = 1
+        groupMaskSavePath = os.path.split(os.path.split(subjects[0])[0])[0] + groupMaskSaveName
+        outputImg = nib.Nifti1Image(groupMask,affine=None)     
+        nib.save(outputImg,groupMaskSavePath)
                     
         # Case 1: comparison between groups
         if compareGroups:
