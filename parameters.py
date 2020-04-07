@@ -62,7 +62,7 @@ nbsOutputPath = '/home/onerva/projects/nbs/output/nbs-results-'
 resampleResolution = 4
 resampleTemplate = '/m/cs/scratch/networks/aokorhon/nbs/ms_nbs/atlases/MNI152_T1_4mm_brain.nii'
 
-groupMaskSaveName = 'group-gray-matter-mask.nii'
+groupMaskSaveName = 'group-mask.nii'
 
 # NBS
 primaryThres = 4 # This is the test statistic threshold for NBS
