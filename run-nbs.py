@@ -49,7 +49,7 @@ verbose = params.verbose
 # Edit the following variables to pick the comparisons to be performed
 
 concatenateNiis = False
-resampleNiis = True
+resampleNiis = False
 
 
 compareGroups = True
@@ -94,7 +94,7 @@ for task,subjectPrefixes, maskPaths in zip(tasks,prefixes,individualMaskPaths):
                 data = ROIplay.readNii(dataPath)
                 if i == j == 0:
                     groupMask = np.ones(data.shape[0:3])
-                groupMask = np.prod(data,axis=3)*groupMask
+                groupMask[np.where(np.prod(data,axis=3)==0)] = 0
         groupMask[np.where(np.abs(groupMask)>0)] = 1
         groupMaskSavePath = os.path.split(os.path.split(subjects[0])[0])[0] + groupMaskSaveName
         outputImg = nib.Nifti1Image(groupMask,affine=None)     
