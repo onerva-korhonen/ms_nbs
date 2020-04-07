@@ -12,12 +12,13 @@ import cPickle as pickle
 from bct import nbs
 import nibabel as nib
 import os
-import system
 
 import ROIplay
 
 import parameters as params
 import functions
+
+import pdb; pdb.set_trace()
 
 tasks = params.tasks
 conditions = params.conditions
@@ -80,9 +81,10 @@ for task,subjectPrefixes, maskPaths in zip(tasks,prefixes,individualMaskPaths):
         # Case for resampling the data to a given resolution, for example to match an atlas template
         # NOTE: resampling is done by FSL FLIRT (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki) that need to be installed
             for subject in subjects:
-                for output, resampledPath in zip(outputs,resampledPaths):
+                for output, resampledPath in zip(outputs,resampled):
                     niiToResample = subject + '/' + task + '/' + output
-                    system('flirt -applyisoxfm ' + resampleResolution + ' -in ' + niiToResample + ' -ref ' + resampleTemplate  + ' -out ' + resampledPath + ' -interp nearestneighbour')
+                    resampledOutputPath = subject + '/' + task + '/' + resampledPath
+                    os.system('flirt -applyisoxfm ' + str(resampleResolution) + ' -in ' + niiToResample + ' -ref ' + resampleTemplate  + ' -out ' + resampledOutputPath + ' -interp nearestneighbour')
             
         for i, subject in enumerate(subjects):
         # Data has already been combined to time series in nii format. Let's greate a group gray matter mask

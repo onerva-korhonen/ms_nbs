@@ -35,10 +35,10 @@ def combineNiis(inputPaths, outputPath, mask=None):
     outputData = []
     for i, path in enumerate(inputPaths):
         img = nib.load(path)
-        if not mask == None:
-            outputData.append(img.get_fdata()*mask)
-        else:
+        if mask is None:
             outputData.append(img.get_fdata())
+        else:
+            outputData.append(img.get_fdata()*mask)
         if i == 0:
             affine = img.affine
         #else:
