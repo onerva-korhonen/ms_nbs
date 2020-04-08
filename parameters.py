@@ -55,7 +55,7 @@ outputPaths = [outputPathsAll]#[outputPathsMild,outputPathsMiddle,outputPathsStr
 
 resampledPaths = [['combined-timeseries-allTasks-block' + str(n) + '_resampled.nii.gz' for n in range(len(inputPathsAll))]]
 
-ROIMaskPath = 'atlases/brainnetome/BNA_MPM_rois_2mm.nii'
+ROIMaskPath = 'atlases/brainnetome/BNA-MPM_thr25_4mm.nii'
 
 nbsOutputPath = '/home/onerva/projects/nbs/output/nbs-results-'
 

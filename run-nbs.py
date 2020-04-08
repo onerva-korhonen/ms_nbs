@@ -50,7 +50,7 @@ verbose = params.verbose
 
 concatenateNiis = False
 resampleNiis = False
-
+useNonResampled = False # set to True to use original, non-resampled data
 
 compareGroups = True
 compareFirstLast = False
@@ -86,7 +86,7 @@ for task,subjectPrefixes, maskPaths in zip(tasks,prefixes,individualMaskPaths):
                     resampledOutputPath = subject + '/' + task + '/' + resampledPath
                     os.system('flirt -applyisoxfm ' + str(resampleResolution) + ' -in ' + niiToResample + ' -ref ' + resampleTemplate  + ' -out ' + resampledOutputPath + ' -interp nearestneighbour')
                     
-        else:
+        elif useNonResampled:
             
         # If the data will not be resampled, let's just ensure that the paths are defined correctly for further steps
             resampled = outputs
