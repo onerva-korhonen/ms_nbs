@@ -10,7 +10,6 @@ A frontend script for running the NBS analysis
 import numpy as np
 import cPickle as pickle
 from bct import nbs
-import nibabel as nib
 import os
 
 import ROIplay
@@ -30,13 +29,10 @@ prefixes = params.prefixes
 inputPaths = params.inputPaths
 individualMaskPaths = params.allIndividualMaskPaths
 outputPaths = params.outputPaths
-resampledPaths = params.resampledPaths
+preprocessedPaths = params.resampledPaths
 ROIMaskPath = params.ROIMaskPath
 nbsOutputPath = params.nbsOutputPath
 groupMaskSaveName = params.groupMaskSaveName
-
-resampleResolution = params.resampleResolution
-resampleTemplate = params.resampleTemplate
 
 primaryThres = params.primaryThres
 pThres = params.pThresh
@@ -60,59 +56,61 @@ compareConditions = False
 # The following loops are over all possible combinations of task and condition (see params for details)
 
 for task,subjectPrefixes, maskPaths in zip(tasks,prefixes,individualMaskPaths):
-    for condition,inputs,outputs,resampled in zip(conditions,inputPaths,outputPaths,resampledPaths):
+    for condition,inputs,preprocessed in zip(conditions,inputPaths,preprocessedPaths):
         nBlocks = len(inputs)
         
-        if concatenateNiis:
-        
-        # Data has been saved as single slides. Let's combine them into time series
-
-            for subject, subjectPrefix, maskPath in zip(subjects, subjectPrefixes, maskPaths):
-                print subject
-                mask = nib.load(maskPath)
-                maskImg = mask.get_fdata()
-                for block, output in zip(inputs, outputs):
-                    block = [subject + '/' + task + '/' + subjectPrefix + fName for fName in block]
-                    output = subject + '/' + task + '/' + output
-                    functions.combineNiis(block,output,mask=maskImg)
-                    
-        if resampleNiis:
-            
-        # Case for resampling the data to a given resolution, for example to match an atlas template
-        # NOTE: resampling is done by FSL FLIRT (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki) that need to be installed
-            for subject in subjects:
-                for output, resampledPath in zip(outputs,resampled):
-                    niiToResample = subject + '/' + task + '/' + output
-                    resampledOutputPath = subject + '/' + task + '/' + resampledPath
-                    os.system('flirt -applyisoxfm ' + str(resampleResolution) + ' -in ' + niiToResample + ' -ref ' + resampleTemplate  + ' -out ' + resampledOutputPath + ' -interp nearestneighbour')
-                    
-        elif useNonResampled:
-            
-        # If the data will not be resampled, let's just ensure that the paths are defined correctly for further steps
-            resampled = outputs
-            resampledPaths = outputPaths
-            
-        for i, subject in enumerate(subjects):
-        # Data has already been combined to time series in nii format. Let's greate a group gray matter mask
-            print subject
-            for j, block in enumerate(resampled):
-                dataPath = subject + '/' + task + '/' + block
-                data = ROIplay.readNii(dataPath)
-                if i == j == 0:
-                    groupMask = np.ones(data.shape[0:3])
-                groupMask[np.where(np.prod(data,axis=3)==0)] = 0
-        groupMaskSavePath = os.path.split(os.path.split(subjects[0])[0])[0] + '/' + groupMaskSaveName
-        outputImg = nib.Nifti1Image(groupMask,affine=None)     
-        nib.save(outputImg,groupMaskSavePath)
+# TODO: remove the commented preprocessing cases below (these have been moved to preprocessing.py)        
+#        if concatenateNiis:
+#        
+#        # Data has been saved as single slides. Let's combine them into time series
+#
+#            for subject, subjectPrefix, maskPath in zip(subjects, subjectPrefixes, maskPaths):
+#                print subject
+#                mask = nib.load(maskPath)
+#                maskImg = mask.get_fdata()
+#                for block, output in zip(inputs, outputs):
+#                    block = [subject + '/' + task + '/' + subjectPrefix + fName for fName in block]
+#                    output = subject + '/' + task + '/' + output
+#                    functions.combineNiis(block,output,mask=maskImg)
+#                    
+#        if resampleNiis:
+#            
+#        # Case for resampling the data to a given resolution, for example to match an atlas template
+#        # NOTE: resampling is done by FSL FLIRT (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki) that need to be installed
+#            for subject in subjects:
+#                for output, resampledPath in zip(outputs,resampled):
+#                    niiToResample = subject + '/' + task + '/' + output
+#                    resampledOutputPath = subject + '/' + task + '/' + resampledPath
+#                    os.system('flirt -applyisoxfm ' + str(resampleResolution) + ' -in ' + niiToResample + ' -ref ' + resampleTemplate  + ' -out ' + resampledOutputPath + ' -interp nearestneighbour')
+#                    
+#        elif useNonResampled:
+#            
+#        # If the data will not be resampled, let's just ensure that the paths are defined correctly for further steps
+#            resampled = outputs
+#            resampledPaths = outputPaths
+#            
+#        for i, subject in enumerate(subjects):
+#        # Data has already been combined to time series in nii format. Let's greate a group gray matter mask
+#            print subject
+#            for j, block in enumerate(resampled):
+#                dataPath = subject + '/' + task + '/' + block
+#                data = ROIplay.readNii(dataPath)
+#                if i == j == 0:
+#                    groupMask = np.ones(data.shape[0:3])
+#                groupMask[np.where(np.prod(data,axis=3)==0)] = 0
+#        groupMaskSavePath = os.path.split(os.path.split(subjects[0])[0])[0] + '/' + groupMaskSaveName
+#        outputImg = nib.Nifti1Image(groupMask,affine=None)     
+#        nib.save(outputImg,groupMaskSavePath)
                     
         # Case 1: comparison between groups
         if compareGroups:
         # Downloading data and calculating adjacency matrices (read all blocks, average adjacency matrices across groups)
+            groupMaskSavePath = os.path.split(os.path.split(subjects[0])[0])[0] + '/' + groupMaskSaveName
             mentalFirstMatrices = []
             physicalFirstMatrices = []
             for subject in subjectsMentalFirst:
                 adjacencyMatrices = []
-                for dataPath in resampled:
+                for dataPath in preprocessed:
                     dataPath = subject + '/' + task + '/' + dataPath
                     ROIMaps,ROITs = ROIplay.pickROITs(dataPath,ROIMaskPath,grayMaskPath=groupMaskSavePath)
                     adjacencyMatrices.append(functions.fisherTransform(np.corrcoef(ROITs)))
@@ -121,7 +119,7 @@ for task,subjectPrefixes, maskPaths in zip(tasks,prefixes,individualMaskPaths):
                 
             for subject in subjectsPhysicalFirst:
                 adjacencyMatrices = []
-                for dataPath in resampled:
+                for dataPath in preprocessed:
                     dataPath = subject + dataPath
                     ROIMaps,ROITs = ROIplay.pickROITs(dataPath,ROIMaskPath)
                     adjacencyMatrices.append(functions.fisherTransform(np.corrcoef(ROITs)))
@@ -150,17 +148,17 @@ for task,subjectPrefixes, maskPaths in zip(tasks,prefixes,individualMaskPaths):
             lastMatricesPhysical = []
             
             for subject in subjectsMentalFirst:
-                _,firstROITs = ROIplay.pickROITs(subject + resampled[0],ROIMaskPath)
+                _,firstROITs = ROIplay.pickROITs(subject + preprocessed[0],ROIMaskPath)
                 firstMatricesMental.append(functions.fisherTransform(np.corrcoef(firstROITs)))
-                _,lastROITs = ROIplay.pickROITs(subject + resampled[-1],ROIMaskPath)
+                _,lastROITs = ROIplay.pickROITs(subject + preprocessed[-1],ROIMaskPath)
                 lastMatricesMental.append(functions.fisherTransform(np.corrcoef(lastROITs)))
             firstMatricesMental = np.stack(firstMatricesMental,axis=2)
             lastMatricesMental = np.stack(lastMatricesMental,axis=2)
             
             for subject in subjectsPhysicalFirst:
-                _,firstROITs = ROIplay.pickROITs(subject + resampled[0],ROIMaskPath)
+                _,firstROITs = ROIplay.pickROITs(subject + preprocessed[0],ROIMaskPath)
                 firstMatricesPhysical.append(functions.fisherTransform(np.corrcoef(firstROITs)))
-                _,lastROITs = ROIplay.pickROITs(subject + resampled[-1],ROIMaskPath)
+                _,lastROITs = ROIplay.pickROITs(subject + preprocessed[-1],ROIMaskPath)
                 lastMatricesPhysical.append(functions.fisherTransform(np.corrcoef(lastROITs)))
             firstMatricesPhysical = np.stack(firstMatricesMental,axis=2)
             lastMatricesPhysical = np.stack(lastMatricesMental,axis=2)
@@ -196,14 +194,14 @@ for task,subjectPrefixes, maskPaths in zip(tasks,prefixes,individualMaskPaths):
             firstMatricesMental = []
             # First, let's calculate adjacency matrix for the first block
             for subject in subjectsMentalFirst:
-                _,firstROITs = ROIplay.pickROITs(subject + resampled[0],ROIMaskPath)
+                _,firstROITs = ROIplay.pickROITs(subject + preprocessed[0],ROIMaskPath)
                 firstMatricesMental.append(functions.fisherTransform(np.corrcoef(firstROITs)))
             firstMatricesMental = np.stack(firstMatricesMental,axis=2)
             # Looping over blocks, let's calculate the next adjacency matrix, run NBS, and save results
             for i in range(nBlocks-1):
                 lastMatricesMental = []
                 for subject in subjectsMentalFirst:
-                    _,lastROITs = ROIplay.pickROITs(subject + resampled[i+1],ROIMaskPath)
+                    _,lastROITs = ROIplay.pickROITs(subject + preprocessed[i+1],ROIMaskPath)
                     lastMatricesMental.append(functions.fisherTransform(np.corrcoef(lastROITs)))
                 lastMatricesMental = np.stack(lastMatricesMental,axis=2)
                 pval, adj, null = nbs(firstMatricesMental,lastMatricesMental,primaryThres,k,tail,withinPaired,verbose)
@@ -218,14 +216,14 @@ for task,subjectPrefixes, maskPaths in zip(tasks,prefixes,individualMaskPaths):
             firstMatricesPhysical = []
             # First, let's calculate adjacency matrix for the first block
             for subject in subjectsPhysicalFirst:
-                _,firstROITs = ROIplay.pickROITs(subject + resampled[0],ROIMaskPath)
+                _,firstROITs = ROIplay.pickROITs(subject + preprocessed[0],ROIMaskPath)
                 firstMatricesPhysical.append(functions.fisherTransform(np.corrcoef(firstROITs)))
             firstMatricesPhysical = np.stack(firstMatricesPhysical,axis=2)
             # Looping over blocks, let's calculate the next adjacency matrix, run NBS, and save results
             for i in range(nBlocks-1):
                 lastMatricesPhysical = []
                 for subject in subjectsPhysicalFirst:
-                    _,lastROITs = ROIplay.pickROITs(subject + resampled[i+1],ROIMaskPath)
+                    _,lastROITs = ROIplay.pickROITs(subject + preprocessed[i+1],ROIMaskPath)
                     lastMatricesPhysical.append(functions.fisherTransform(np.corrcoef(lastROITs)))
                 lastMatricesPhysical = np.stack(lastMatricesPhysical,axis=2)
                 pval, adj, null = nbs(firstMatricesPhysical,lastMatricesPhysical,primaryThres,k,tail,withinPaired,verbose)
@@ -240,10 +238,10 @@ for task,subjectPrefixes, maskPaths in zip(tasks,prefixes,individualMaskPaths):
     # Case 4: inside groups between conditions (Note: this is inside the task loop but not inside the condition loop)
     if compareConditions: 
         conditionMatrices = [[] for condition in conditions]
-        for i, (conditions, inputs, outputs) in enumerate(zip(conditions,inputPaths,resampledPaths)):
+        for i, (conditions, inputs, preprocessed) in enumerate(zip(conditions,inputPaths,preprocessedPaths)):
             for subject in subjectsMentalFirst:
                 adjacencyMatrices = []
-                for dataPath in outputs:
+                for dataPath in preprocessed:
                     dataPath = subject + dataPath
                     _,ROITs = ROIplay.pickROITs(dataPath,ROIMaskPath)
                     adjacencyMatrices.append(functions.fisherTransform(np.corrcoef(ROITs)))
@@ -260,10 +258,10 @@ for task,subjectPrefixes, maskPaths in zip(tasks,prefixes,individualMaskPaths):
                 with open(savePath, 'wb') as f:
                     pickle.dump(data, f, -1)
                     
-        for i, (conditions, inputs, outputs) in enumerate(zip(conditions,inputPaths,resampledPaths)):
+        for i, (conditions, inputs, preprocessed) in enumerate(zip(conditions,inputPaths,preprocessedPaths)):
             for subject in subjectsPhysicalFirst:
                 adjacencyMatrices = []
-                for dataPath in outputs:
+                for dataPath in preprocessed:
                     dataPath = subject + dataPath
                     _,ROITs = ROIplay.pickROITs(dataPath,ROIMaskPath)
                     adjacencyMatrices.append(functions.fisherTransform(np.corrcoef(ROITs)))

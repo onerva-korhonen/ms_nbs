@@ -40,6 +40,8 @@ inputPathsAll = [['00001-001144-01.nii','00001-001188-01.nii','00001-001232-01.n
                   '00001-011880-01.nii','00001-011924-01.nii','00001-011968-01.nii','00001-012012-01.nii','00001-012056-01.nii','00001-012100-01.nii','00001-012144-01.nii']]
 inputPaths = [inputPathsAll]#[inputPathsMild,inputPathsMiddle,inputPathsStrong]
 
+anatomicalInputPaths = [[[]]] # Paths to anatomical brain images for registration; this should have the same length as inputPaths
+
 # these will be tasks x subjects lists
 individualMaskPathsMentalFirst = [['/m/cs/scratch/networks/aokorhon/nbs/data/masks_mental_first/' + subject + '/mask_M.nii' for subject in ['P01_DS','P2_CA','P03_CR','P3_HE','P6_CS','P8_TM','P10_BT','P12_SG','P14_OA','P16_CA','P18_CM','P20_BC','P24_HJ','P26_PC','P28_YM','P30_RD','P33_SL','P37_GS','P39_PR']],
                                   ['/m/cs/scratch/networks/aokorhon/nbs/data/masks_mental_first/' + subject + '/mask_P.nii' for subject in ['P01_DS','P2_CA','P03_CR','P3_HE','P6_CS','P8_TM','P10_BT','P12_SG','P14_OA','P16_CA','P18_CM','P20_BC','P24_HJ','P26_PC','P28_YM','P30_RD','P33_SL','P37_GS','P39_PR']]]
@@ -55,12 +57,18 @@ outputPaths = [outputPathsAll]#[outputPathsMild,outputPathsMiddle,outputPathsStr
 
 resampledPaths = [['combined-timeseries-allTasks-block' + str(n) + '_resampled.nii.gz' for n in range(len(inputPathsAll))]]
 
+regMatrixStruc2StdPaths = [['reg-matrix-struc2std' + str(n) + '.mat' for n in range(len(inputPathsAll))]]
+regMatrixFunc2StrucPaths = [['reg-matrix-func2struc' + str(n) + '.mat' for n in range(len(inputPathsAll))]]
+regMatrixFunc2StdPaths = [['reg-matrix-funcc2std' + str(n) + '.mat' for n in range(len(inputPathsAll))]]
+anatomicalStandardSpacePaths = [['anat_STD_' + str(n) + '.nii.gz' for n in range(len(inputPathsAll))]]
+standardSpacePaths = [['combined-timeseries-allTasks-block' + str(n) + '_resampled_STD.nii.gz' for n in range(len(inputPathsAll))]]
+
 ROIMaskPath = 'atlases/brainnetome/BNA-MPM_thr25_4mm.nii'
 
 nbsOutputPath = '/home/onerva/projects/nbs/output/nbs-results-'
 
 resampleResolution = 4
-resampleTemplate = '/m/cs/scratch/networks/aokorhon/nbs/ms_nbs/atlases/MNI152_T1_4mm_brain.nii'
+MNITemplate = '/m/cs/scratch/networks/aokorhon/nbs/ms_nbs/atlases/MNI152_T1_4mm_brain.nii'
 
 groupMaskSaveName = 'group-mask.nii'
 
